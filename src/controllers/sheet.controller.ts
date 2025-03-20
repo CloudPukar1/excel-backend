@@ -7,12 +7,19 @@ export const createSheet = async (
   next: NextFunction
 ) => {
   try {
-    const { name, userId, data } = req.body;
+    const {
+      name,
+      // userId
+    } = req.body;
 
     const sheet = new Sheet({
       name,
-      userId,
-      data,
+      // userId,
+      data: [
+        ["", "", ""],
+        ["", "", ""],
+        ["", "", ""],
+      ],
     });
     await sheet.save();
     res.status(201).json({
@@ -25,7 +32,22 @@ export const createSheet = async (
   }
 };
 
-export const getSheets = () => {};
+export const getSheets = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const sheets = await Sheet.find();
+    res.json({
+      success: true,
+      message: "Sheet data fetched successfully",
+      data: sheets,
+    });
+  } catch (error) {
+    next({ message: "Error fetching sheets" });
+  }
+};
 
 export const getSheet = async (
   req: Request,
