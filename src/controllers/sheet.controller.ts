@@ -62,7 +62,7 @@ export const updateSheet = async (
     );
 
     if (!sheet) {
-      return next({ status: 404, message: "Sheet not found" });
+      next({ status: 404, message: "Sheet not found" });
     }
 
     res.json({

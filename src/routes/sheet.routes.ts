@@ -1,18 +1,21 @@
 import express from "express";
 
-import * as sheetController from "../controllers/sheet.controller";
+import {
+  createSheet,
+  deleteSheet,
+  getSheet,
+  getSheets,
+  updateSheet,
+} from "../controllers/sheet.controller";
 
 const router = express.Router();
 
-router
-  .route("/")
-  .post(sheetController.createSheet)
-  .get(sheetController.getSheets);
+router.route("/").post(createSheet).get(getSheets);
 
 router
   .route("/:id")
-  .get(sheetController.getSheet)
-  .put(sheetController.updateSheet)
-  .delete(sheetController.deleteSheet);
+  .get(getSheet)
+  // .put(updateSheet)
+  .delete(deleteSheet);
 
 export default router;
