@@ -7,15 +7,12 @@ export const createSheet = async (
   next: NextFunction
 ) => {
   try {
-    const {
-      name,
-      // userId
-    } = req.body;
+    const { name, data } = req.body;
 
     const sheet = new Sheet({
       name,
       // userId,
-      data: [
+      data: data ?? [
         ["", "", ""],
         ["", "", ""],
         ["", "", ""],
