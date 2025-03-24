@@ -111,6 +111,6 @@ export const deleteSheet = async (
       message: "Sheet deleted successfully",
     });
   } catch (error) {
-    next({ message: "Error updating sheet" });
+    next({ message: "Error deleting sheet" });
   }
 };
