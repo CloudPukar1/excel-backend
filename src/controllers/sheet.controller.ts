@@ -1,70 +1,96 @@
 import { NextFunction, Request, Response } from "express";
 import Sheet from "../models/sheet.model";
+import { asyncHandler, CustomError } from "../lib/utils";
+import Grid from "../models/grid.model";
 
-export const createSheet = async (
-  req: Request,
-  res: Response,
-  next: NextFunction
-) => {
-  try {
-    const { name, data } = req.body;
+export const createSheet = asyncHandler(async (req, res) => {
+  let sheet = await Sheet.create({
+    createdBy: req.user._id,
+  });
 
-    const sheet = new Sheet({
-      name,
-      // userId,
-      data: data ?? [
-        ["", "", ""],
-        ["", "", ""],
-        ["", "", ""],
-      ],
-    });
-    await sheet.save();
-    res.status(201).json({
-      success: true,
-      message: "Sheet created successfully",
-      data: sheet,
-    });
-  } catch (error) {
-    next({ message: "Error Creating sheet" });
-  }
-};
+  const grid = await Grid.create({
+    createdBy: req.user._id,
+    sheetId: sheet._id,
+  });
 
-export const getSheets = async (
-  req: Request,
-  res: Response,
-  next: NextFunction
-) => {
-  try {
-    const sheets = await Sheet.find();
-    res.json({
-      success: true,
-      message: "Sheet data fetched successfully",
-      data: sheets,
-    });
-  } catch (error) {
-    next({ message: "Error fetching sheets" });
-  }
-};
+  const newSheet = await Sheet.findByIdAndUpdate(
+    sheet._id,
+    { $push: { grids: grid._id } },
+    { new: true }
+  );
 
-export const getSheet = async (
-  req: Request,
-  res: Response,
-  next: NextFunction
-) => {
-  try {
-    const sheet = await Sheet.findById(req.params.id);
-    if (sheet) {
-      next({ status: 404, message: "Sheet not found" });
+  res.status(201).json({
+    success: true,
+    message: "Sheet created successfully",
+    data: newSheet,
+  });
+});
+
+export const getSheets = asyncHandler(async (req, res) => {
+  const { page = 1, search = "", limit = 20 } = req.query;
+  const { _id: userId } = req.user;
+
+  const matchQuery = {
+    createdBy: userId,
+    title: { $regex: search, $options: "i" },
+  };
+
+  const sheets = await Sheet.find(
+    matchQuery,
+    { createdBy: 0 },
+    {
+      sort: {
+        createdAt: 1,
+      },
+      limit: +limit,
+      skip: (+page - 1) * +limit,
     }
-    res.json({
-      success: true,
-      message: "Sheet data fetched successfully",
-      data: sheet,
-    });
-  } catch (error) {
-    next({ message: "Error fetching sheet" });
+  );
+
+  const count = (await Sheet.find(matchQuery)).length;
+
+  const pageMeta = {
+    totalPages: Math.ceil(count / +limit),
+    total: count,
+    page: +page,
+  };
+  res.json({
+    success: true,
+    message: "Sheet data fetched successfully",
+    data: { sheets, pageMeta },
+  });
+});
+
+export const getSheet = asyncHandler(async (req, res) => {
+  const sheet = await Sheet.findById(req.params.sheetId, {
+    grids: 1,
+    title: 1,
+    createdBy: 1,
+  }).populate({
+    path: "grids",
+    select: { title: 1, color: 1, sheetId: 1 },
+  });
+
+  if (!sheet) {
+    throw new CustomError({ status: 404, message: "Sheet not found" });
   }
-};
+
+  if (sheet.createdBy.toString() !== req.user._id) {
+    throw new CustomError({
+      message: "You don't have access to view and edit this document",
+      status: 400,
+    });
+  }
+  res.json({
+    success: true,
+    message: "Sheet data fetched successfully",
+    data: {
+      _id: sheet._id,
+      title: sheet.title,
+      grids: sheet.grids,
+    },
+  });
+});
 
 export const updateSheet = async (
   req: Request,

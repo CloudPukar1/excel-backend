@@ -1,27 +1,29 @@
-import mongoose from "mongoose";
+import { Types, Schema, model } from "mongoose";
 
-const SheetSchema = new mongoose.Schema({
-  name: {
-    type: String,
-    required: true,
+const SheetSchema = new Schema(
+  {
+    title: {
+      default: "Untitled Spreadsheet",
+      type: String,
+    },
+    grids: {
+      type: [Types.ObjectId],
+      ref: "Grid",
+      required: true,
+    },
+    createdBy: {
+      type: Types.ObjectId,
+      ref: "User",
+      required: true,
+    },
+    lastOpenedAt: {
+      type: Date,
+      default: Date.now,
+    },
   },
-  // userId: {
-  //   type: mongoose.Schema.Types.ObjectId,
-  //   ref: "User",
-  //   required: true,
-  // },
-  data: {
-    type: [[String]],
-    required: true,
-  },
-  createdAt: {
-    type: Date,
-    default: Date.now,
-  },
-  updatedAt: {
-    type: Date,
-    default: Date.now,
-  },
-});
+  {
+    timestamps: true,
+  }
+);
 
-export default mongoose.model("Sheet", SheetSchema);
+export default model("Sheet", SheetSchema);

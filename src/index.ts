@@ -10,13 +10,14 @@ import { errorHandler } from "./middlewares/error-handler.middleware";
 const app = express();
 const port = 3000;
 
-app.use(cors());
-app.use(helmet());
-app.use(cookieParser());
-app.use(express.json());
-app.use(morgan("combined"));
-app.use(express.static("public"));
-app.use(express.urlencoded({ extended: true }));
+app
+  .use(cors())
+  .use(helmet())
+  .use(cookieParser())
+  .use(express.json())
+  .use(morgan("combined"))
+  .use(express.static("public"))
+  .use(express.urlencoded({ extended: true }));
 
 app.use("/api/v1", routes);
 
