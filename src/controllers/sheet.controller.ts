@@ -1,6 +1,11 @@
 import { NextFunction, Request, Response } from "express";
-import Sheet from "../models/sheet.model";
+
 import { asyncHandler, CustomError } from "../lib/utils";
+
+import Sheet from "../models/sheet.model";
+import Cell from "../models/cell.model";
+import Row from "../models/row.model";
+import Column from "../models/column.model";
 import Grid from "../models/grid.model";
 
 export const createSheet = asyncHandler(async (req, res) => {
@@ -92,51 +97,38 @@ export const getSheet = asyncHandler(async (req, res) => {
   });
 });
 
-export const updateSheet = async (
-  req: Request,
-  res: Response,
-  next: NextFunction
-) => {
-  try {
-    const { data } = req.body;
+export const updateSheet = asyncHandler(async (req, res, next) => {
+  const { sheetId } = req.params;
 
-    const sheet = await Sheet.findByIdAndUpdate(
-      req.params.id,
-      { data, updatedAt: Date.now() },
-      { new: true }
-    );
+  const sheet = await Sheet.findById(sheetId);
 
-    if (!sheet) {
-      next({ status: 404, message: "Sheet not found" });
-    }
-
-    res.json({
-      success: true,
-      message: "Sheet data fetched successfully",
-      data: sheet,
-    });
-  } catch (error) {
-    next({ message: "Error updating sheet" });
+  if (!sheet) {
+    throw new CustomError({ status: 400, message: "Sheet not exist" });
   }
-};
 
-export const deleteSheet = async (
-  req: Request,
-  res: Response,
-  next: NextFunction
-) => {
-  try {
-    const sheet = await Sheet.findByIdAndDelete(req.params.id);
+  await Sheet.findByIdAndUpdate(sheetId, { $set: req.body });
+  res.status(200).json({ message: "Sheet has been updated successfully" });
+});
 
-    if (!sheet) {
-      return next({ status: 404, message: "Sheet not found" });
-    }
+export const deleteSheet = asyncHandler(async (req, res, next) => {
+  const { sheetId } = req.params;
 
-    res.json({
-      success: true,
-      message: "Sheet deleted successfully",
-    });
-  } catch (error) {
-    next({ message: "Error deleting sheet" });
+  const sheet = await Sheet.findById(sheetId);
+
+  if (!sheet) {
+    throw new CustomError({ status: 404, message: "Sheet not found" });
   }
-};
+
+  const query = { gridId: { $in: sheet.grids } };
+
+  await Cell.deleteMany(query);
+  await Row.deleteMany(query);
+  await Column.deleteMany(query);
+  await Grid.deleteMany({ _id: { $in: sheet.grids } });
+  await Sheet.findByIdAndDelete(sheetId);
+
+  res.json({
+    success: true,
+    message: "Sheet deleted successfully",
+  });
+});

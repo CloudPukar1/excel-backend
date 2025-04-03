@@ -6,6 +6,7 @@ const GridSchema = new Schema(
       type: Types.ObjectId,
       required: true,
       index: true,
+      ref: "Sheet"
     },
     title: {
       default: "Sheet 1",
