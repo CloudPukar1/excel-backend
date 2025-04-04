@@ -5,18 +5,18 @@ import {
   getUsers,
   updateUser,
   deleteUser,
-  getUser
+  getUser,
 } from "../controllers/user.controller";
+import { verifyToken } from "../middlewares/verify-token.middleware";
 
 const router = express.Router();
 
-router.route("/")
-  .post(createUser)
-  .get(getUsers)
+router.route("/").post(createUser).get(verifyToken, getUsers);
 
-router.route("/:id")
-  .get(getUser)
-  .put(updateUser)
-  .delete(deleteUser);
+router
+  .route("/:id")
+  .get(verifyToken, getUser)
+  .put(verifyToken, updateUser)
+  .delete(verifyToken, deleteUser);
 
 export default router;

@@ -1,29 +1,33 @@
 import { NextFunction, Request, Response } from "express";
-import User from "../models/sheet.model";
+import User from "../models/user.model";
+import { asyncHandler, CustomError } from "../lib/utils";
+import { generateJwtToken } from "../lib/utils/helpers";
 
-export const createUser = async (
-  req: Request,
-  res: Response,
-  next: NextFunction
-) => {
-  try {
-    const { email, password, name } = req.body;
-    let user = await User.findOne({ email: email });
-    if (user) {
-      next({ status: 400, message: "Email already in use" });
-    }
-    user = new User({ email, password, name });
-    user.save();
-    res.json({
-      success: true,
-      message: "New user Created",
-      data: user,
-    });
-  } catch (error) {
-    next({ message: "Error Logging In" });
+export const createUser = asyncHandler(async (req, res, next) => {
+  const { email, password, name } = req.body;
+  let isUserExists = await User.findOne({ email: email });
+  if (isUserExists) {
+    throw new CustomError({ status: 400, message: "Email already in use" });
   }
-};
+  const user = await User.create({
+    name,
+    email,
+    password,
+  });
 
+  const token = generateJwtToken({
+    _id: user._id,
+    name: user.name,
+    email: user.email,
+    colorCode: user.colorCode,
+  });
+
+  res.json({
+    data: { token },
+    message: "Registered successfully",
+    success: true,
+  });
+});
 
 export const getUsers = async (
   req: Request,
