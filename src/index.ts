@@ -2,11 +2,12 @@ import cors from "cors";
 import morgan from "morgan";
 import helmet from "helmet";
 import express from "express";
+import dotenv from "dotenv";
 import cookieParser from "cookie-parser";
 
 import routes from "./routes";
 import { errorHandler } from "./middlewares/error-handler.middleware";
-
+dotenv.config();
 const app = express();
 const port = 3000;
 

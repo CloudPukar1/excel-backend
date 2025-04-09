@@ -6,7 +6,7 @@ export const generateRandomColor = () => {
 };
 
 export const generateJwtToken = (payload: string | object) => {
-  return sign(payload, "process.env.JWT_SECRET as string", {
+  return sign(payload, process.env.JWT_SECRET as string, {
     expiresIn: "5d",
   });
 };
