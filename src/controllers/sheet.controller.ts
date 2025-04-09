@@ -97,7 +97,7 @@ export const getSheet = asyncHandler(async (req, res) => {
   });
 });
 
-export const updateSheet = asyncHandler(async (req, res, next) => {
+export const updateSheet = asyncHandler(async (req, res) => {
   const { sheetId } = req.params;
 
   const sheet = await Sheet.findById(sheetId);
@@ -110,9 +110,9 @@ export const updateSheet = asyncHandler(async (req, res, next) => {
   res.status(200).json({ message: "Sheet has been updated successfully" });
 });
 
-export const deleteSheet = asyncHandler(async (req, res, next) => {
+export const deleteSheet = asyncHandler(async (req, res) => {
   const { sheetId } = req.params;
-
+  console.log(sheetId);
   const sheet = await Sheet.findById(sheetId);
 
   if (!sheet) {
