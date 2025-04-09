@@ -2,6 +2,8 @@ import bcrypt from "bcrypt";
 import { NextFunction, Request, Response } from "express";
 
 import User from "../models/user.model";
+import { CustomError } from "../lib/utils";
+import { generateJwtToken } from "../lib/utils/helpers";
 
 export const loginUser = async (
   req: Request,
@@ -10,24 +12,31 @@ export const loginUser = async (
 ) => {
   try {
     const { email, password } = req.body;
-    const isUserExists = await User.findOne({ email: email });
+    const isUserExists = await User.findOne({ email });
     if (!isUserExists) {
-      next({ status: 404, message: "Invalid Credentials" });
+      throw new CustomError({ status: 404, message: "Invalid Credentials" });
     }
     const isPasswordMatched = await bcrypt.compare(
       password,
-      isUserExists?.password!
+      isUserExists.password!
     );
     if (!isPasswordMatched) {
-      next({ status: 401, message: "Invalid Credentials" });
+      throw new CustomError({ status: 401, message: "Invalid Credentials" });
     }
+
+    const token = generateJwtToken({
+      _id: isUserExists._id,
+      name: isUserExists.name,
+      email: isUserExists.email,
+      colorCode: isUserExists.colorCode,
+    });
+
     res.json({
       success: true,
-      message: "Sheet data fetched successfully",
-      data: isUserExists,
+      message: "User logged in successfully",
+      data: { token },
     });
   } catch (error) {
     next({ message: "Error Logging In" });
   }
 };
-
